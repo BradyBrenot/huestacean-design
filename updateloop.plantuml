@@ -1,10 +1,9 @@
 @startuml
 
-actor GUI
+actor Frontend
 
 == Device detection ==
-GUI -> Server : Scan
-Server -> DeviceProvider : Scan
+Frontend -> DeviceProvider : Scan
 activate DeviceProvider
 ... Time passes ...
 return done
@@ -19,7 +18,7 @@ note over Room
  and do an isEqual check for each of them.
 end note
 
-GUI -> Room : Add device
+Frontend -> Room : Add device
 
 == Update the location of a device ==
 
@@ -46,7 +45,7 @@ note over Room #FFAAAA
 
 end note
 
-GUI -> Room : Set Location (Device, Location)
+Frontend -> Room : Set Location (Device, Location)
 activate Room
 Room -> Device : Get proxies for location
 activate Device

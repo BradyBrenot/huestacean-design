@@ -8,7 +8,7 @@ class ProviderType {
   static ProviderType fromString(String)
 }
 
-class World << (S, lightblue) >> {
+class Backend << (S, lightblue) >> {
   void serve()
 
   unique_ptr<Room>[] rooms
@@ -65,9 +65,9 @@ class DeviceProvider {
   Update(const& RenderProxy[])
 }
 
-World o-- Device
-World *-- Room
-World *-- DeviceProvider
+Backend o-- Device
+Backend *-- Room
+Backend *-- DeviceProvider
 
 Device .. RenderProxy
 
@@ -78,8 +78,8 @@ DeviceProvider o-- Device
 Room *-- DeviceInRoom
 Room *-- Effect
 
-GUIFrontend .. World
-HTTPFrontend .. World
+GUIFrontend .. Backend
+HTTPFrontend .. Backend
 
 RenderProxy .. DeviceProvider
 
