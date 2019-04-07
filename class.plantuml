@@ -20,16 +20,38 @@ class Effect {
 }
 
 class Room {
+  mutex lock
+
   DeviceInRoom[] devices
-  map<ProviderType, RenderProxy[]> renderProxies
   Effect[] effects
+
+  Color[] colors
+  Box[] positions
+  unique_ptr<DeviceData>[] data
+
+  map<ProviderType, DeviceProviderUpdateParams> updateParams
 
   String serialize()
   deserialize(String)
 }
 
+class DeviceData {
+
+}
+
+Room .. DeviceData
+
+note right of Room
+  All access to Room is locked behind one Mutex. 
+  Contention will be uncommon. Most of the time
+  it's only going to be locked by the update loop.
+  Sometimes the GUI will lock it to modify the room,
+  which will cause the update loop to potentially
+  stall, or vice-versa, but this should be brief.
+end note
+
 class DeviceInRoom {
-  Device device
+  unique_ptr<Device> device
   Box position
 }
 
@@ -37,25 +59,55 @@ class Device {
   String serialize()
   String getName()
 
-  (RenderProxy[], ProviderType) GetProxiesForLocation(Box)
+  (Box[], unique_ptr<DeviceData>[], ProviderType) GetLightDataForLocation(Box)
   virtual operator==(const otherDevice&)=0
 }
 
+note left of Device
+  Devices are passed around
+  with unique_ptr always.
+  They are not shared.
+end note
+
 class DeviceFactory {
-  Device deserialize(String)
+  unique_ptr<Device> deserialize(String)
 }
 
-class RenderProxy {
-  Box position
-  Color color
+class DeviceProviderUpdateParams {
+  iterator colorsBegin
+  iterator colorsEnd
+  bool colorsDirty
+  
+  iterator positionBegin
+  iterator positionEnd
+  bool positionDirty
+  
+  iterator dataBegin
+  iterator dataEnd
+  bool dataDirty
 }
+
+note top of DeviceProviderUpdateParams
+  This class is here to make it simpler to pass
+  data to DeviceProviders for upload. Copy only
+  has to be done on the dirtied data.
+
+  The "data" array is arbitrary data that can
+  be handled differently by different DeviceProviders,
+  with the intention that it be used to help
+  identify what device the positions/colors
+  belong to for upload reasons.
+end note
 
 class DeviceProvider {
   ProviderType type
-  Device devices
 
-  Update(const& RenderProxy[])
+  Update(DeviceProviderUpdateParams params) = 0
+  std::vector< unique_ptr<Device> > getDevices() = 0
 }
+
+Room .. DeviceProviderUpdateParams
+DeviceProvider .. DeviceProviderUpdateParams
 
 Backend o-- Device
 Backend *-- Room
@@ -97,18 +149,19 @@ RenderProxy .. DeviceProvider
 ' ==== Hue ====
 
 package Hue {
-  class HueRenderProxy
   class HueDevice
   class HueDeviceProvider
   class HueBridge
+  class HueDeviceData
 }
 
 class HueDevice {
-  UID id
+  String id
+  String bridge
 }
 
-class HueRenderProxy {
-  UID id
+class HueDeviceData {
+  HueDevice device
 }
 
 class HueDeviceProvider {
@@ -119,11 +172,13 @@ class HueDeviceProvider {
 
 class HueBridge {
   void Link()
+
+  String id
 }
 
 HueDeviceProvider *-- HueBridge
+DeviceData <|-- HueDeviceData
 
-RenderProxy <|-- HueRenderProxy
 Device <|-- HueDevice
 DeviceProvider <|-- HueDeviceProvider
 
