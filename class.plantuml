@@ -19,14 +19,6 @@ class Effect {
   Update(mutable& proxy[])
 }
 
-class GUIFrontend {
-
-}
-
-class HTTPFrontend {
-
-}
-
 class Room {
   DeviceInRoom[] devices
   map<ProviderType, RenderProxy[]> renderProxies
@@ -80,6 +72,25 @@ Room *-- Effect
 
 GUIFrontend .. Backend
 HTTPFrontend .. Backend
+CLI .. HTTPFrontend
+
+App << (P, #FFBBBB) >>
+Foreground << (P, #FFBBBB) >>
+BackgroundService << (P, #FFBBBB) >>
+GUIProcess << (P, #FFBBBB) >>
+CLIProcess << (P, #FFBBBB) >>
+
+GUIProcess *-- GUIFrontend
+GUIProcess *-- HTTPFrontend
+GUIProcess *-- Backend
+CLIProcess *-- Backend
+CLIProcess *-- HTTPFrontend
+
+BackgroundService *-- Backend
+BackgroundService *-- HTTPFrontend
+Foreground *-- GUIFrontend
+App *-- BackgroundService
+App *-- Foreground
 
 RenderProxy .. DeviceProvider
 
