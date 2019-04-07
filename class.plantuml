@@ -37,16 +37,16 @@ class Room {
 }
 
 class DeviceInRoom {
-  shared_ptr<Device> Device
+  Device device
   Box position
 }
 
 class Device {
-  bool isConnected()
   String serialize()
   String getName()
 
   (RenderProxy[], ProviderType) GetProxiesForLocation(Box)
+  virtual operator==(const otherDevice&)=0
 }
 
 class DeviceFactory {
@@ -60,7 +60,7 @@ class RenderProxy {
 
 class DeviceProvider {
   ProviderType type
-  shared_ptr<Device>[] devices
+  Device devices
 
   Update(const& RenderProxy[])
 }

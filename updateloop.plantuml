@@ -6,14 +6,45 @@ actor GUI
 GUI -> Server : Scan
 Server -> DeviceProvider : Scan
 activate DeviceProvider
+... Time passes ...
 return done
 deactivate DeviceProvider
 
 == Add a device to a room ==
 
+note over Room
+ There shall be no weird complicated threaded access to Devices.
+ Devices are passed by value. Always. For the GUI to know if a 
+ Device is connected or not, it shall simply get all Devices
+ and do an isEqual check for each of them.
+end note
+
 GUI -> Room : Add device
 
 == Update the location of a device ==
+
+note over Room
+ To separate concerns while keeping the update code simple,
+ Devices shall be responsible for providing an array of "render proxies"
+ representing the lights or pixels within the device. A Razer keyboard
+ will provide all 100-whatever keys as separate render proxies, while
+ a hue device will usually provide 1 render proxy per device.
+end note
+
+note over Room #FFAAAA
+ It may be most efficient to reconstruct the render proxy array every
+ time any element thereof is changed, and set it up so that one can
+ simply slice it and provide those slices to the individual
+ DeviceProviders later down. This maintains better data coherency
+ for a very mild update/initialization cost.
+ 
+ e.g. the array should look like
+ ""{ HueBridg1Device1, HueBridge1Device2,""
+ ""  HueBridge2Device1, Razer1, Razer2, Razer3 }""
+
+ Then pass the array over to the DeviceProvider as vector::iterators
+
+end note
 
 GUI -> Room : Set Location (Device, Location)
 activate Room
@@ -24,9 +55,20 @@ return done
 
 == Update the room's lighting ==
 
+note over Room
+ Whole arrays of render proxies are iterated over in Effects at once,
+ allowing for SIMD processing eventually, and at least hopefully until
+ then avoiding icache misses.
+end note
+
 Room -> Effect : Update(mutable& proxy[])
 activate Effect
 return
+
+note over Room
+ Render proxies are passed to the DeviceProviders, which **copy** them
+end note
+
 Room -> DeviceProvider : Update(const& proxy[])
 activate DeviceProvider
 DeviceProvider -> DeviceProvider : UpdateBuffer(const& proxy[])
@@ -34,10 +76,15 @@ return
 
 == Upload lighting to Hue ==
 
+note over Room
+ The DeviceProvider is using double buffering to avoid lock contention in the main loop
+end note
+
 DeviceProvider -> DeviceProvider : Upload
 activate DeviceProvider
 DeviceProvider -> DeviceProvider : Flip Buffer
 DeviceProvider ->[ : Upload
+... Time passes ...
 [-> DeviceProvider : Done
 return
 
