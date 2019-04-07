@@ -1,0 +1,119 @@
+@startuml
+class ProviderType {
+  enum Value
+
+  operator==()
+  operator!=()
+  toString()
+  static ProviderType fromString(String)
+}
+
+class World << (S, lightblue) >> {
+  void serve()
+
+  unique_ptr<Room>[] rooms
+  unique_ptr<DeviceProvider>[] deviceProviders
+}
+
+class Effect {
+  Update(mutable& proxy[])
+}
+
+class GUIFrontend {
+
+}
+
+class HTTPFrontend {
+
+}
+
+class Room {
+  DeviceInRoom[] devices
+  map<ProviderType, RenderProxy[]> renderProxies
+  Effect[] effects
+
+  String serialize()
+  deserialize(String)
+}
+
+class DeviceInRoom {
+  shared_ptr<Device> Device
+  Box position
+}
+
+class Device {
+  bool isConnected()
+  String serialize()
+  String getName()
+
+  (RenderProxy[], ProviderType) GetProxiesForLocation(Box)
+}
+
+class DeviceFactory {
+  Device deserialize(String)
+}
+
+class RenderProxy {
+  Box position
+  Color color
+}
+
+class DeviceProvider {
+  ProviderType type
+  shared_ptr<Device>[] devices
+
+  Update(const& RenderProxy[])
+}
+
+World o-- Device
+World *-- Room
+World *-- DeviceProvider
+
+Device .. RenderProxy
+
+Device .. DeviceFactory
+
+DeviceInRoom o-- Device
+DeviceProvider o-- Device
+Room *-- DeviceInRoom
+Room *-- Effect
+
+GUIFrontend .. World
+HTTPFrontend .. World
+
+RenderProxy .. DeviceProvider
+
+' ==== Hue ====
+
+package Hue {
+  class HueRenderProxy
+  class HueDevice
+  class HueDeviceProvider
+  class HueBridge
+}
+
+class HueDevice {
+  UID id
+}
+
+class HueRenderProxy {
+  UID id
+}
+
+class HueDeviceProvider {
+  HueBridge[] bridges
+
+  void Scan()
+}
+
+class HueBridge {
+  void Link()
+}
+
+HueDeviceProvider *-- HueBridge
+
+RenderProxy <|-- HueRenderProxy
+Device <|-- HueDevice
+DeviceProvider <|-- HueDeviceProvider
+
+@enduml

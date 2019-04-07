@@ -1,0 +1,44 @@
+@startuml
+
+actor GUI
+
+== Device detection ==
+GUI -> Server : Scan
+Server -> DeviceProvider : Scan
+activate DeviceProvider
+return done
+deactivate DeviceProvider
+
+== Add a device to a room ==
+
+GUI -> Room : Add device
+
+== Update the location of a device ==
+
+GUI -> Room : Set Location (Device, Location)
+activate Room
+Room -> Device : Get proxies for location
+activate Device
+return proxies
+return done
+
+== Update the room's lighting ==
+
+Room -> Effect : Update(mutable& proxy[])
+activate Effect
+return
+Room -> DeviceProvider : Update(const& proxy[])
+activate DeviceProvider
+DeviceProvider -> DeviceProvider : UpdateBuffer(const& proxy[])
+return
+
+== Upload lighting to Hue ==
+
+DeviceProvider -> DeviceProvider : Upload
+activate DeviceProvider
+DeviceProvider -> DeviceProvider : Flip Buffer
+DeviceProvider ->[ : Upload
+[-> DeviceProvider : Done
+return
+
+@enduml
