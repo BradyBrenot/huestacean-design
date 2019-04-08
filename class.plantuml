@@ -113,8 +113,6 @@ Backend o-- Device
 Backend *-- Room
 Backend *-- DeviceProvider
 
-Device .. RenderProxy
-
 Device .. DeviceFactory
 
 DeviceInRoom o-- Device
@@ -143,8 +141,6 @@ BackgroundService *-- HTTPFrontend
 Foreground *-- GUIFrontend
 App *-- BackgroundService
 App *-- Foreground
-
-RenderProxy .. DeviceProvider
 
 ' ==== Hue ====
 
